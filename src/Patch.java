@@ -8,8 +8,8 @@ public class Patch {
 
     public Patch() {
         if (Params.randomInt(0, 100) < Params.PERCENT_BEST_LAND) {
-            maxGrainHere = Params.NUM_GRAIN_GROWN;
-            grainHere = Params.NUM_GRAIN_GROWN;
+            maxGrainHere = Params.MAX_GRAIN;
+            grainHere = maxGrainHere;
         } else {
             maxGrainHere = 0;
             grainHere = 0;

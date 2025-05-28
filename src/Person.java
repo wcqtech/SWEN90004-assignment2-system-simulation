@@ -18,7 +18,7 @@ public class Person {
         this.lifeExpectancy = randomLifeExpectancy();
         this.wealth = randomWealth(this.metabolism);
         this.age = randomLifespan(this.lifeExpectancy);
-        this.vision = randomVersion();
+        this.vision = randomVision();
         this.x = randomX();
         this.y = randomY();
     }
@@ -32,11 +32,11 @@ public class Person {
     }
 
     private int randomWealth(int metabolism){
-        return metabolism * Params.randomInt(0, 50);
+        return metabolism + Params.randomInt(0, 50);
     }
 
-    private int randomVersion(){
-        return Params.randomInt(0, Params.NUM_VISION);
+    private int randomVision(){
+        return Params.randomInt(1, Params.NUM_VISION);
     }
 
     private int randomLifespan(int lifeExpectancy){
@@ -53,43 +53,34 @@ public class Person {
 
     public void turnTowardsGrainAndMove(Landscape landscape) {
         //move the turtle to the patch with the most grain
-        double[] totalDirection = {0, 0, 0, 0, 0};
+        double maxValue = landscape.patches.get(x).get(y).grainHere;
+        int maxValueX = x;
+        int maxValueY = y;
         //这里不确定能不能原地不动，逻辑上应该可以
-        int[] dx = {0, 0, 0, -1, 1};
-        int[] dy = {0, 1, -1, 0, 0};
+        int[] dx = {0, 0, -1, 1};
+        int[] dy = {1, -1, 0, 0};
 
         //遍历视野范围内的所有格子
         for (int i = 0; i <= vision; i++) {
-            for (int j = 0; j < 5; j++) {
+            for (int j = 0; j < 4; j++) {
                 //判断格子是否合法
                 if (x + dx[j] * i >= 0 && x + dx[j] * i < Params.MAX_X
                         && y + dy[j] * i >= 0 && y + dy[j] * i < Params.MAX_Y) {
                     //计算每个格子的总方向
-                    totalDirection[j] += landscape.patches.get(x + dx[j] * i).get(y + dy[j] * i).grainHere;
-                } else {
-                    //如果走到的格子不合法，就置成-1
-                    totalDirection[j] = -1;
+                    double targetValue = landscape.patches.get(x + dx[j] * i).get(y + dy[j] * i).grainHere;
+                    if (targetValue >= maxValue){
+                        maxValue = targetValue;
+                        maxValueX = x + dx[j] * i;
+                        maxValueY = y + dy[j] * i;
+                    }
                 }
-            }
-        }
-
-        int maxIndex = 0;
-        //找到总方向最大的格子
-        for (int i = 1; i < 5; i++) {
-            if (totalDirection[i] > totalDirection[maxIndex]) {
-                maxIndex = i;
             }
         }
 
         //从原先的patch上把这个人移除
         landscape.patches.get(x).get(y).peopleHere.remove(this);
 
-        //移动到新的格子
-        x += dx[maxIndex];
-        y += dy[maxIndex];
-
-        //再放到新的patch上
-        landscape.patches.get(x).get(y).peopleHere.add(this);
+        landscape.patches.get(maxValueX).get(maxValueY).peopleHere.add(this);
 
     }
 
@@ -100,15 +91,33 @@ public class Person {
             //死掉然后放一个后代在这
             produceChild();
         }
+
     }
 
     public void produceChild() {
         //实际上是变成一个小孩
         id = nextId++;
         age = 0;
-        metabolism = randomMetabolism();
-        wealth = randomWealth(metabolism);
         lifeExpectancy = randomLifeExpectancy();
-        vision = randomVersion();
+        metabolism = randomMetabolism();
+        if (!Params.INHERIT_WEALTH){
+            wealth = randomWealth(metabolism);
+        } else {
+//            wealth = Math.max(wealth, metabolism);
+            //第一种继承方案，无负债开局+随机值
+            wealth = randomWealth(metabolism) + Math.max(0, wealth);
+            //第二种继承方案，有负债开局+随机值
+//            wealth = randomWealth(metabolism) + wealth;
+            //第三种继承方案，完全继承
+//            wealth = Math.max(wealth, 0);
+        }
+
+        if (!Params.INHERIT_VISION){
+            vision = randomVision();
+        } else {
+            vision = Math.max(vision, randomVision());
+        }
+
+
     }
 }
