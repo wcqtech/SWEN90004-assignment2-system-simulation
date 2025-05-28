@@ -19,9 +19,9 @@ public class Params {
     public static final int TIME = 300;
 
     //Used to configure whether the children born after the death of a person will inherit the wealth of their parents
-    public static final boolean INHERIT_WEALTH = false;
-    //Used to configure whether the children born after the death of a person will inherit the vision of their parents
-    public static final boolean INHERIT_VISION = false;
+    public static final boolean INHERIT_WEALTH = true;
+    //Inheriting wealth types
+    public static final int INHERIT_WEALTH_TYPE = 3;
 
     static int randomInt(int min, int max) {
         return new Random().nextInt(max - min + 1) + min;

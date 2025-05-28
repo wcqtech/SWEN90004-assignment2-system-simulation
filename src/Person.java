@@ -111,29 +111,29 @@ public class Person {
         age = 0;
         lifeExpectancy = randomLifeExpectancy();
         metabolism = randomMetabolism();
+        vision = randomVision();
         if (!Params.INHERIT_WEALTH){
             //If do not inherit parents' wealth, set a random value
             wealth = randomWealth(metabolism);
         } else {
-            //The first inheritance scheme is to inherit the parents' wealth and generate random value.
-            //Note that in this case, if the parents' wealth is negative, it will not be inherited.
-            wealth = randomWealth(metabolism) + Math.max(0, wealth);
-            //The second inheritance scheme is to inherit the wealth of the parents and generate random value.
-            //Note that in this case, if the parents' wealth is negative, debt may occur.
-//            wealth = randomWealth(metabolism) + wealth;
-            //The third inheritance scheme is to only inherit the wealth of the parents, without generating random values.
-            //This means that if the parents die because they have no wealth, the children will also have no shortage of survival.
-//            wealth = Math.max(wealth, 0);
+            switch (Params.INHERIT_WEALTH_TYPE){
+                case 1:
+                    //The first inheritance scheme is to inherit the parents' wealth and generate random value.
+                    //Note that in this case, if the parents' wealth is negative, it will not be inherited.
+                    wealth = randomWealth(metabolism) + Math.max(0, wealth);
+                    break;
+                case 2:
+                    //The second inheritance scheme is to inherit the wealth of the parents and generate random value.
+                    //Note that in this case, if the parents' wealth is negative, debt may occur.
+                    wealth = randomWealth(metabolism) + wealth;
+                case 3:
+                    //The third inheritance scheme is to only inherit the wealth of the parents, without generating random values.
+                    //This means that if the parents die because they have no wealth, the children will also have no shortage of survival.
+                    wealth = Math.max(wealth, 0);
+                    break;
+                default:
+                    throw new RuntimeException("ERROR INHERIT WEALTH TYPE");
+            }
         }
-
-        if (!Params.INHERIT_VISION){
-            vision = randomVision();
-        } else {
-            //Normally, the child is educated by the parent.
-            //To simulate this, set the child's vision to the larger of the random value and the parent's value.
-            vision = Math.max(vision, randomVision());
-        }
-
-
     }
 }
