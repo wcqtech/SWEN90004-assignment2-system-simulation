@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.StringJoiner;
 
 public class Utils {
+    //Write data to csv file
     public static void writeInCSV(String path, List<List<Double>> data) {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(path, true))) {
             for (List<Double> row : data) {

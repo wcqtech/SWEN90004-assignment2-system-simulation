@@ -1,7 +1,7 @@
 public class Person {
+    //Generate a unique ID for each person
     private static int nextId = 0;
 
-    //这个是用来输出的
     protected int id;
     protected int age;
     protected double wealth;
@@ -17,29 +17,34 @@ public class Person {
         this.metabolism = randomMetabolism();
         this.lifeExpectancy = randomLifeExpectancy();
         this.wealth = randomWealth(this.metabolism);
-        this.age = randomLifespan(this.lifeExpectancy);
+        this.age = randomAge(this.lifeExpectancy);
         this.vision = randomVision();
         this.x = randomX();
         this.y = randomY();
     }
 
+    //Generate random metabolism
     private int randomMetabolism(){
         return Params.randomInt(1, Params.METABOLISM_MAX);
     }
 
+    //Generate random life expectancy
     private int randomLifeExpectancy(){
         return Params.randomInt(Params.LIFE_EXPECTANCY_MIN, Params.LIFE_EXPECTANCY_MAX);
     }
 
+    //Generate random wealth
     private int randomWealth(int metabolism){
         return metabolism + Params.randomInt(0, 50);
     }
 
+    //Generate random vision
     private int randomVision(){
         return Params.randomInt(1, Params.NUM_VISION);
     }
 
-    private int randomLifespan(int lifeExpectancy){
+    //Generate random age
+    private int randomAge(int lifeExpectancy){
         return Params.randomInt(0, lifeExpectancy);
     }
 
@@ -51,23 +56,28 @@ public class Person {
         return Params.randomInt(0, Params.MAX_Y - 1);
     }
 
+    //Move the turtle to the patch with the most grains in its field of vision
     public void turnTowardsGrainAndMove(Landscape landscape) {
-        //move the turtle to the patch with the most grain
+        //The maximum grain value within the field of vision
         double maxValue = landscape.patches.get(x).get(y).grainHere;
+        //The coordinates of the patch with the maximum grain value
         int maxValueX = x;
         int maxValueY = y;
-        //这里不确定能不能原地不动，逻辑上应该可以
+
+        //The direction of movement
         int[] dx = {0, 0, -1, 1};
         int[] dy = {1, -1, 0, 0};
 
-        //遍历视野范围内的所有格子
+        //Loop through the vision
         for (int i = 0; i <= vision; i++) {
+            //Loop through the four directions
             for (int j = 0; j < 4; j++) {
-                //判断格子是否合法
+                //Determine whether the coordinates are legal
                 if (x + dx[j] * i >= 0 && x + dx[j] * i < Params.MAX_X
                         && y + dy[j] * i >= 0 && y + dy[j] * i < Params.MAX_Y) {
-                    //计算每个格子的总方向
+                    //Get the grain value of the target patch
                     double targetValue = landscape.patches.get(x + dx[j] * i).get(y + dy[j] * i).grainHere;
+                    //Update the maximum grain value and coordinates
                     if (targetValue >= maxValue){
                         maxValue = targetValue;
                         maxValueX = x + dx[j] * i;
@@ -84,37 +94,43 @@ public class Person {
 
     }
 
+    //Consume wealth and age, and die if wealth is exhausted or age exceeds life expectancy
     public void eatAgeDie(Landscape landscape) {
         wealth = wealth - metabolism;
         age++;
         if (wealth < 0 || age > lifeExpectancy) {
-            //死掉然后放一个后代在这
+            //If a person dies, one child is produced
             produceChild();
         }
 
     }
 
     public void produceChild() {
-        //实际上是变成一个小孩
+        //Essentially, it resets the properties of the Person object.
         id = nextId++;
         age = 0;
         lifeExpectancy = randomLifeExpectancy();
         metabolism = randomMetabolism();
         if (!Params.INHERIT_WEALTH){
+            //If do not inherit parents' wealth, set a random value
             wealth = randomWealth(metabolism);
         } else {
-//            wealth = Math.max(wealth, metabolism);
-            //第一种继承方案，无负债开局+随机值
+            //The first inheritance scheme is to inherit the parents' wealth and generate random value.
+            //Note that in this case, if the parents' wealth is negative, it will not be inherited.
             wealth = randomWealth(metabolism) + Math.max(0, wealth);
-            //第二种继承方案，有负债开局+随机值
+            //The second inheritance scheme is to inherit the wealth of the parents and generate random value.
+            //Note that in this case, if the parents' wealth is negative, debt may occur.
 //            wealth = randomWealth(metabolism) + wealth;
-            //第三种继承方案，完全继承
+            //The third inheritance scheme is to only inherit the wealth of the parents, without generating random values.
+            //This means that if the parents die because they have no wealth, the children will also have no shortage of survival.
 //            wealth = Math.max(wealth, 0);
         }
 
         if (!Params.INHERIT_VISION){
             vision = randomVision();
         } else {
+            //Normally, the child is educated by the parent.
+            //To simulate this, set the child's vision to the larger of the random value and the parent's value.
             vision = Math.max(vision, randomVision());
         }
 

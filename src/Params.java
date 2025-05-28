@@ -15,10 +15,12 @@ public class Params {
 
     public static final int MAX_GRAIN = 50;
 
-    //迭代的次数netlogo的模型里没有，因为他是要一直跑下去的，这里设置一个，为了让程序结束
-    public static final int EPOCH = 300;
+    //The number of times the program runs
+    public static final int TIME = 300;
 
+    //Used to configure whether the children born after the death of a person will inherit the wealth of their parents
     public static final boolean INHERIT_WEALTH = false;
+    //Used to configure whether the children born after the death of a person will inherit the vision of their parents
     public static final boolean INHERIT_VISION = false;
 
     static int randomInt(int min, int max) {

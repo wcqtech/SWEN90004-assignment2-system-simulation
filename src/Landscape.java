@@ -21,42 +21,44 @@ public class Landscape {
     }
 
     public void go(){
+        //result stores the data in the Param.TIME row and the NUM_PEOPLE column.
+        //data(i,j) represents the wealth of person j at time i.
         List<List<Double>> result = new ArrayList<>();
-        for (int e = 0; e < Params.EPOCH; e++) {
-            //先给每个人都找到要去的地方
+        for (int t = 0; t < Params.TIME; t++) {
+            //Find the best pathch for everyone and move
             for (Person person : people) {
                 person.turnTowardsGrainAndMove(this);
             }
-            //然后收获粮食，如果一个patch上存在多人，则平分
+            //Harvest the food. If there are multiple people on a patch, divide it equally.
             for (ArrayList<Patch> row : patches) {
                 for (Patch patch : row) {
                     patch.harvest();
                 }
             }
-            //每个人新陈代谢年龄增长
+            //Everyone metabolizes, ages, and potentially dies.
             for (Person person : people) {
                 person.eatAgeDie(this);
             }
-            //每个patch重新长grain
-            for (ArrayList<Patch> row : patches) {
-                if (grainGrowthClockTicks == 0){
+            //Each patch grows grain, but only if it has been long enough since the last grain growth.
+            if (grainGrowthClockTicks == 0){
+                for (ArrayList<Patch> row : patches) {
                     for (Patch patch : row) {
                         patch.growGrain();
                     }
-                    grainGrowthClockTicks = Params.GRAIN_GROWTH_INTER;
-                } else {
-                    grainGrowthClockTicks--;
                 }
+            } else {
+                grainGrowthClockTicks--;
             }
-            //统计所有人的财富
+            //Collect the wealth of everyone and store it in the result array
             List<Double> epochWealthOfEveryone = people.stream().map(v -> v.wealth).collect(Collectors.toList());
             result.add(epochWealthOfEveryone);
         }
+        //Write the result to a csv file
         String filePath = String.format("result/%s%s%s", "wealth-distribution-", LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd-HH-mm-ss")), ".csv");
         Utils.writeInCSV(filePath, result);
     }
 
-    //设置每个patch的初始谷物数量
+    //Set up the initial amounts of grain each patch has
     private void setupPatches(){
         //give some patches the highest amount of grain possible these patches are the "best land"
         for (int i = 0; i < Params.MAX_X; i++) {
@@ -70,7 +72,6 @@ public class Landscape {
 
         //spread that grain around the window a little and put a little back into the patches that are the "best land" found above
         for (int i = 0; i < 5; i++) {
-            //遍历所有 maxGrainHere != 0 的patch，并设置其grainHere = maxGrainHere
             for (int j = 0; j < Params.MAX_X; j++) {
                 for (int k = 0; k < Params.MAX_Y; k++) {
                     Patch patch = patches.get(j).get(k);
@@ -101,6 +102,7 @@ public class Landscape {
         }
     }
 
+    //set up the initial values for the turtle variables
     private void setupPeople(){
         for (int i = 0; i < Params.NUM_PEOPLE; i++) {
             Person p = new Person();
@@ -109,19 +111,19 @@ public class Landscape {
         }
     }
 
+    //Diffuse value from the center to the surrounding
     private void diffuse(Patch patch, double number, ArrayList<Patch> neighbors){
-        //计算要分给周patches的份额
+        //Calculate the shares to be given to neighbors
         double totalDiffusionGrain = patch.grainHere * number;
-        //关于份额如何分配详见https://ccl.northwestern.edu/netlogo/docs/dict/diffuse.html
-        //当前patch减去要分出去的份额再加上要保留的份额
+        //Calculate the value of the current patch after diffusion
         patch.grainHere -= ((double) neighbors.size() / 8) * totalDiffusionGrain;
-        //周围的patches加上分出去的份额
+        //Calculate the value of the neighbor after diffusion
         for (Patch neighbor : neighbors) {
-            //这里patch的grainHere可能会暂时的超过maxGrainHere，不过别担心后面的逻辑中还会统一处理的
             neighbor.grainHere += totalDiffusionGrain / 8;
         }
     }
 
+    //Get the neighbors of a patch
     private ArrayList<Patch> getNeighbors(int patchX, int patchY){
         ArrayList<Patch> neighbors = new ArrayList<>();
         for (int i = -1; i <= 1; i++){
